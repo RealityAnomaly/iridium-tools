@@ -1,8 +1,11 @@
 import * as winston from 'winston';
+
 import * as sdk from '../sdk/index.ts';
 import * as types from '../sdk/types.ts';
+
 import { DataCallOptions, SDKError, SDKTaskResult, SDKTaskType } from "./types.ts";
 import { SDKStatus, SDKStatusMapper } from "./status.ts";
+import { IridiumGoSIP } from "../sip/client.ts";
 
 /**
  * Options passed to the SOAP API
@@ -21,6 +24,7 @@ export class IridiumGo {
   protected readonly logger?: winston.Logger;
 
   protected readonly client: sdk.SdkClient;
+  private sip?: IridiumGoSIP;
 
   constructor(options: IridiumGoOptions, logger: winston.Logger | undefined, client: sdk.SdkClient) {
     this.options = options;
@@ -36,6 +40,16 @@ export class IridiumGo {
     return new IridiumGo(options, logger, client);
   };
 
+  /**
+   * Stops active client(s) and releases all resources
+   */
+  public async stop(): Promise<void> {
+    if (this.sip) {
+      this.sip.stop();
+      this.sip = undefined;
+    };
+  };
+
   private get userCredentials(): types.sdk_user_credentials_t {
     return {
       userName: this.options.username,
@@ -47,6 +61,26 @@ export class IridiumGo {
     if (Number.parseInt(response.error) === 0) return response;
     const code = SDKError[Number.parseInt(response.error)];
     throw new Error(`SDK call returned error ${code}: ${response.errorMessage}`);
+  };
+
+  /**
+   * Returns a SIP connection for this radio. If it does not exist, it will be created.
+   */
+  public async getSIP(): Promise<IridiumGoSIP> {
+    if (this.sip) return this.sip;
+
+    this.sip = new IridiumGoSIP(this.options);
+    await this.sip.start();
+
+    return this.sip;
+  };
+
+  /**
+   * Sends a SMS message to the provided phone number
+   */
+  public async sendSMS(number: string, content: string): Promise<void> {
+    const sip = await this.getSIP();
+    await sip.sendSMS(number, content);
   };
 
   /**

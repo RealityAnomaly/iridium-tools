@@ -5,6 +5,7 @@
     "jsr:@std/internal@^1.0.5": "1.0.5",
     "jsr:@std/path@^1.0.8": "1.0.8",
     "npm:commander@^12.1.0": "12.1.0",
+    "npm:sip.js@~0.21.2": "0.21.2",
     "npm:soap@^1.1.7": "1.1.7",
     "npm:winston@^3.17.0": "3.17.0",
     "npm:wsdl-tsclient@*": "1.7.1",
@@ -433,6 +434,9 @@
         "is-arrayish"
       ]
     },
+    "sip.js@0.21.2": {
+      "integrity": "sha512-tSqTcIgrOd2IhP/rd70JablvAp+fSfLSxO4hGNY6LkWRY1SKygTO7OtJEV/BQb8oIxtMRx0LE7nUF2MaqGbFzA=="
+    },
     "soap@1.1.7": {
       "integrity": "sha512-zKNMtlZhnqhW0jv5z8qVE5A/1Vw/HKXnIFe2bss8s/+tqub4uLU9r20A4mTfiluePHABvm7p2YQjyvFBJjIf9A==",
       "dependencies": [
@@ -602,6 +606,7 @@
       "jsr:@std/assert@1",
       "jsr:@std/path@^1.0.8",
       "npm:commander@^12.1.0",
+      "npm:sip.js@~0.21.2",
       "npm:soap@^1.1.7",
       "npm:winston@^3.17.0",
       "npm:wsdl-tsclient@^1.7.1"
