@@ -11,6 +11,7 @@ export interface UDPTransportOptions {
   socket: dgram.Socket;
   port: number;
   address: string;
+  sourceAddress: string;
   traceSip: boolean;
 }
 
@@ -113,8 +114,9 @@ export class UDPTransport implements sipjs.Transport {
   public async connect(): Promise<void> {
     this._socket.on('message', (msg, _rinfo) => {
       if (this.onMessage) {
-        this.logger.log(`Received message ${msg.toString()}`);
-        this.onMessage(msg.toString());
+        const str = msg.toString();
+        this.logger.log(`Received message ${str}`);
+        this.onMessage(str);
       };
     });
     
@@ -134,6 +136,10 @@ export class UDPTransport implements sipjs.Transport {
   };
 
   public async send(message: string): Promise<void> {
+    // dirty, disgusting hack
+    const address = this._socket.address();
+    message = message.replace(`${this.configuration.sourceAddress};branch`, `${this.configuration.sourceAddress}:${address.port};branch`);
+
     if (this.configuration.traceSip === true) {
       this.logger.log("Sending UDP message:\n\n" + message + "\n");
     };

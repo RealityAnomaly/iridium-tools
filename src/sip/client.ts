@@ -4,7 +4,7 @@ import { UDPUserAgent } from "./agent.ts";
 
 export class IridiumGoSIP {
   private readonly options: IridiumGoOptions;
-  private userAgent?: UDPUserAgent;
+  public userAgent?: UDPUserAgent;
   private registerer?: sipjs.Registerer;
 
   constructor(options: IridiumGoOptions) {
@@ -12,9 +12,9 @@ export class IridiumGoSIP {
   };
 
   public async start(): Promise<void> {
-    // TODO: variable IP etc
     this.userAgent = await UDPUserAgent.create(this.options.server, 5060, {
-      uri: sipjs.UserAgent.makeURI(`sip:${this.options.username}@${this.options.server}`),
+      uri: sipjs.UserAgent.makeURI(`sip:${this.options.username}@iridiumgo.lan`),
+      authorizationUsername: this.options.username,
       authorizationPassword: this.options.password,
     });
 
@@ -29,7 +29,7 @@ export class IridiumGoSIP {
   };
 
   public async sendSMS(number: string, content: string, _wait: boolean = false): Promise<void> {
-    const target = sipjs.UserAgent.makeURI(`sip:${number}@${this.options.server}`);
+    const target = sipjs.UserAgent.makeURI(`sip:${number}@iridiumgo.lan`);
     if (!target) {
       throw new Error(`Failed to parse number ${number} for SMS`);
     };

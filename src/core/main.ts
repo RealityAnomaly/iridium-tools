@@ -20,7 +20,7 @@ export interface IridiumGoOptions {
  * Convenience wrapper around the Iridium Go SOAP API
  */
 export class IridiumGo {
-  protected readonly options: IridiumGoOptions;
+  public readonly options: IridiumGoOptions;
   protected readonly logger?: winston.Logger;
 
   protected readonly client: sdk.SdkClient;
