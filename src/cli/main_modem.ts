@@ -13,6 +13,7 @@ interface IridiumCLIModemCallOptions {
   dialNumber?: string;
   wait: boolean;
   waitDelay: number;
+  daemon: boolean;
 };
 
 export class IridiumCLIModem extends commander.Command {
@@ -24,6 +25,10 @@ export class IridiumCLIModem extends commander.Command {
       firewallExceptions: options.firewallException,
       dnsForwarding: options.dnsForwarding,
       dialNumber: options.dialNumber
+    };
+
+    if (options.daemon) {
+      options.wait = true;
     };
 
     while (true) {
@@ -46,10 +51,12 @@ export class IridiumCLIModem extends commander.Command {
 
       let connected = false;
       while (true) {
-        const result = await this.app.api!.setInternet(true, apiOptions);
-        if (!options.wait) {
-          console.log(result.message);
-          break;
+        if (!connected) {
+          const result = await this.app.api!.setInternet(true, apiOptions);
+          if (!options.wait) {
+            console.log(result.message);
+            break;
+          };
         };
 
         await new Promise(resolve => setTimeout(resolve, 5000));
@@ -57,14 +64,19 @@ export class IridiumCLIModem extends commander.Command {
         // wait on status to go green
         const status = await this.app.api!.getStatus([{ name: 'active call' }]);
         if (status.internetConnectionStatus === SDKInternetStatus.Connected) {
-          console.log(`Sucessfully connected to ${status.activeInternetCallNumber}`);
-          connected = true;
-          break;
-        } else if (status.internetConnectionStatus === SDKInternetStatus.Unknown) {
+          if (!connected) {
+            console.log(`Sucessfully connected to ${status.activeInternetCallNumber}`);
+            connected = true;
+          };
+
+          if (!options.daemon) break;
+        } else if (status.internetConnectionStatus === SDKInternetStatus.Unknown || status.internetConnectionStatus === SDKInternetStatus.Terminated) {
           console.log(`Call failed, retrying shortly. Error: ${SDKInternetTerminationReason[status.internetTerminationReason!]}`)
+          connected = false;
           break;
         } else {
           console.log(`Connection in progress, current status is ${SDKInternetStatus[status.internetConnectionStatus!]}`)
+          connected = false;
         };
       };
 
@@ -94,10 +106,11 @@ export class IridiumCLIModem extends commander.Command {
       .description('Initiates a data call')
       .option('-a, --allow-all-traffic', 'allows all traffic through the firewall (not recommended)')
       .option('-e, --firewall-exception', 'specifies a list of firewall exceptions to use', collect, [])
-      .option('-d, --dns-forwarding', 'enables DNS forwarding for the connection')
+      .option('-f, --dns-forwarding', 'enables DNS forwarding for the connection')
       .option('-n, --dial-number', 'dials the specified number (defaults to Iridium gateway)')
       .option('-w, --wait', 'keeps retrying the call until the connection succeeds', false)
       .option('--wait-delay <seconds>', 'time between connection attempts in the case of failure, in seconds', Number.parseInt, 30)
+      .option('-d, --daemon', 'keeps the data call alive, implies --wait', false)
       .action(this.dial.bind(this));
     
     this.command('hangup')

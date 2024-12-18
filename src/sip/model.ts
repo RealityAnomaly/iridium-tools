@@ -1,3 +1,5 @@
+import { SDKInternetStatus } from "../core/status.ts";
+
 export interface IridiumSIPPayload {
   "presence"?: {
     "@entity": string,
@@ -10,51 +12,51 @@ export interface IridiumSIPPayload {
     }
   },
   "reg"?: {
-    version: number,
+    version: string,
     state: 'full',
     registration: {
       contact: {
         uri: string,
         state: {
-          '@state': number,
+          '@state': string,
           '@details': 'active',
         }
       }
     }
   },
   "sim-status"?: {
-    code: number,
+    code: string,
     description: string,
   },
   "signal-strength"?: {
-    value: number,
+    value: string,
   },
   "network-registration"?: {
-    status: number,
+    status: IridiumSIPNetworkRegistrationState,
   },
   "sbd-registration-state"?: {
-    status: number,
+    status: IridiumSIPSBDRegistrationState,
   },
   "sbd-attach-state"?: {
-    status: number,
+    status: IridiumSIPSBDAttachState,
   },
   "battery"?: {
-    capacity: number,
-    temperature: number,
-    present: boolean,
-    charging: boolean
+    capacity: string,
+    temperature: string,
+    present: string,
+    charging: string
   },
   "sos-state"?: {
-    active: boolean
+    active: string
   },
   "gps-location"?: {
-    "valid-location-data": boolean,
+    "valid-location-data": string,
     source: string,
-    "gps-fix": boolean,
-    "gps-powered-on": boolean
+    "gps-fix": string,
+    "gps-powered-on": string
   }
   "internet-connection"?: {
-    status: number
+    status: SDKInternetStatus
   },
   "connected-users"?: {
     "registered-user-count": number,
@@ -62,21 +64,21 @@ export interface IridiumSIPPayload {
       "display-name"?: string,
       username: string,
       priority: number,
-      "call_active": boolean
+      "call_active": string
     }
   },
   "user-privileges"?: {
     user: {
       username: string,
-      "can-make-calls": boolean,
-      priority: number,
-      "can-send-SMS": boolean,
-      "can-receive-SMS": boolean,
-      "can-send-SBD": boolean,
-      "can-receive-SBD": boolean,
-      "can-access-twitter": boolean,
-      "can-access-tracking": boolean,
-      "is-admin-user": boolean
+      "can-make-calls": string,
+      priority: string,
+      "can-send-SMS": string,
+      "can-receive-SMS": string,
+      "can-send-SBD": string,
+      "can-receive-SBD": string,
+      "can-access-twitter": string,
+      "can-access-tracking": string,
+      "is-admin-user": string
     }
   },
   "call-status"?: {
@@ -86,6 +88,21 @@ export interface IridiumSIPPayload {
   "call-details"?: {},
   // deno-lint-ignore ban-types
   "alerts"?: {},
+};
+
+export enum IridiumSIPNetworkRegistrationState {
+  NotRegistered = 0,
+  Registered = 1
+};
+
+export enum IridiumSIPSBDRegistrationState {
+  NotRegistered = 0,
+  Registered = 1
+};
+
+export enum IridiumSIPSBDAttachState {
+  Detached = 0,
+  Attached = 1
 };
 
 export class IridiumSIPPayloadUtils {
@@ -99,19 +116,19 @@ export class IridiumSIPPayloadUtils {
     } else if (payload["signal-strength"]) {
       return `Signal Strength: ${payload["signal-strength"].value}/5`;
     } else if (payload["network-registration"]) {
-      return `Network Registration: ${payload["network-registration"].status}`;
+      return `Network Registration: ${IridiumSIPNetworkRegistrationState[payload["network-registration"].status]}`;
     } else if (payload["sbd-registration-state"]) {
-      return `SBD Registration State: ${payload["sbd-registration-state"].status}`;
+      return `SBD Registration State: ${IridiumSIPSBDRegistrationState[payload["sbd-registration-state"].status]}`;
     } else if (payload["sbd-attach-state"]) {
-      return `SBD Attach State: ${payload["sbd-attach-state"].status}`;
+      return `SBD Attach State: ${IridiumSIPSBDAttachState[payload["sbd-attach-state"].status]}`;
     } else if (payload.battery) {
-      return `Battery: ${payload.battery.capacity}% ${payload.battery.charging ? 'charging' : 'discharging'} at ${payload.battery.temperature}°C`;
+      return `Battery: ${payload.battery.capacity}%, ${payload.battery.charging === 'true' ? 'charging' : 'not charging'}, at ${payload.battery.temperature}°C`;
     } else if (payload["sos-state"]) {
-      return `SOS State: ${payload["sos-state"].active ? 'active' : 'inactive'}`;
+      return `SOS State: ${payload["sos-state"].active === 'true' ? 'active' : 'inactive'}`;
     } else if (payload["gps-location"]) {
-      return `GPS Location: ${payload["gps-location"]["valid-location-data"] ? 'valid' : 'invalid'} ${payload["gps-location"]["gps-fix"] ? 'fixed' : 'not fixed'} ${payload["gps-location"]["gps-powered-on"] ? 'powered on' : 'powered off'}`;
+      return `GPS Location: ${payload["gps-location"]["valid-location-data"] === 'true' ? 'valid' : 'invalid'} ${payload["gps-location"]["gps-fix"] === 'true' ? 'fixed' : 'not-fixed'} ${payload["gps-location"]["gps-powered-on"] === 'true' ? 'powered-on' : 'powered-off'}`;
     } else if (payload["internet-connection"]) {
-      return `Internet Connection: ${payload["internet-connection"].status}`;
+      return `Internet Connection: ${SDKInternetStatus[payload["internet-connection"].status]}`;
     } else if (payload["connected-users"]) {
       return `Connected Users: ${payload["connected-users"]["registered-user-count"]}`;
     } else if (payload["user-privileges"]) {
